@@ -2,15 +2,25 @@ version: '3'
 services:
   app:
     build: .
+    env_file: .env
     ports:
-      - "8080:8080"
+      - "8080:${SERVER_PORT}"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: [ "sh", "-c", "/go-cloud-native-rest-api/bin/migrate up && /go-cloud-native-rest-api/bin/api" ]
 
   db:
     image: postgres:alpine
     environment:
-      - POSTGRES_DB=gcnra_db
-      - POSTGRES_USER=gcnra_user
-      - POSTGRES_PASSWORD=gcnra_pass
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
     ports:
-      - "5432:5432"
+      - "${DB_PORT}:${DB_PORT}"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
+      interval: 3s
+      timeout: 5s
+      retries: 5
     restart: always

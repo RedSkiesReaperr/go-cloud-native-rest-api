@@ -1,22 +1,24 @@
 package main
 
 import (
+	"fmt"
+	"go-cloud-native-rest-api/config"
 	"io"
 	"log"
 	"net/http"
-	"time"
 )
 
 func main() {
+	config := config.New()
 	mux := http.NewServeMux()
 	mux.HandleFunc("/hello", hello)
 
 	s := &http.Server{
-		Addr:         ":8080",
+		Addr:         fmt.Sprintf(":%d", config.Server.Port),
 		Handler:      mux,
-		ReadTimeout:  2 * time.Second,
-		WriteTimeout: 2 * time.Second,
-		IdleTimeout:  5 * time.Second,
+		ReadTimeout:  config.Server.TimeoutRead,
+		WriteTimeout: config.Server.TimeoutWrite,
+		IdleTimeout:  config.Server.TimeoutIdle,
 	}
 
 	log.Printf("Starting server at '%s'\n", s.Addr)

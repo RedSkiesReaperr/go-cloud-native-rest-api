@@ -8,11 +8,13 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
+
+	"go-cloud-native-rest-api/config"
 )
 
 const (
-	dialect  = "pgx"
-	dbString = "host=localhost user=gcnra_user password=gcnra_pass dbname=gcnra_db port=5432 sslmode=disable"
+	dialect     = "pgx"
+	fmtDBString = "host=%s user=%s password=%s dbname=%s port=%d sslmode=disable"
 )
 
 var (
@@ -31,6 +33,9 @@ func main() {
 	}
 
 	command := args[0]
+
+	c := config.NewDB()
+	dbString := fmt.Sprintf(fmtDBString, c.Host, c.Username, c.Password, c.DBName, c.Port)
 
 	db, err := goose.OpenDBWithDriver(dialect, dbString)
 	if err != nil {
