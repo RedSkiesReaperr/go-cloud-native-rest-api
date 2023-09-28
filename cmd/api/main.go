@@ -6,6 +6,10 @@ import (
 	"go-cloud-native-rest-api/config"
 	"log"
 	"net/http"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	gormlogger "gorm.io/gorm/logger"
 )
 
 //  @title          go-cloud-native-rest-api API
@@ -22,8 +26,21 @@ import (
 // @basePath   /v1
 func main() {
 	config := config.New()
-	router := router.New()
 
+	logLevel := gormlogger.Error
+	if config.DB.Debug {
+		logLevel = gormlogger.Info
+	}
+
+	const fmtDBString = "host=%s user=%s password=%s dbname=%s port=%d sslmode=disable"
+	dbString := fmt.Sprintf(fmtDBString, config.DB.Host, config.DB.Username, config.DB.Password, config.DB.DBName, config.DB.Port)
+	db, err := gorm.Open(postgres.Open(dbString), &gorm.Config{Logger: gormlogger.Default.LogMode(logLevel)})
+	if err != nil {
+		log.Fatal("DB connection start failure")
+		return
+	}
+
+	router := router.New(db)
 	s := &http.Server{
 		Addr:         fmt.Sprintf(":%d", config.Server.Port),
 		Handler:      router,
